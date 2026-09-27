@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: hiringleads
+      POSTGRES_PASSWORD: hiringleads
+      POSTGRES_DB: hiringleads
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hiringleads -d hiringleads"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build: .
+    environment:
+      HL_DATABASE_URL: postgresql+asyncpg://hiringleads:hiringleads@db:5432/hiringleads
+      HL_AUTO_CREATE_SCHEMA: "false"
+      HL_API_KEY: compose-dev-key
+      HL_UNSUBSCRIBE_SECRET: compose-dev-unsubscribe-secret
+    command: ["hl", "db", "upgrade"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build: .
+    environment:
+      HL_DATABASE_URL: postgresql+asyncpg://hiringleads:hiringleads@db:5432/hiringleads
+      HL_AUTO_CREATE_SCHEMA: "false"
+      HL_API_KEY: compose-dev-key
+      HL_UNSUBSCRIBE_SECRET: compose-dev-unsubscribe-secret
+      HL_PUBLIC_BASE_URL: http://localhost:8000
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "8000:8000"
+
+  worker:
+    build: .
+    environment:
+      HL_DATABASE_URL: postgresql+asyncpg://hiringleads:hiringleads@db:5432/hiringleads
+      HL_AUTO_CREATE_SCHEMA: "false"
+      HL_API_KEY: compose-dev-key
+      HL_UNSUBSCRIBE_SECRET: compose-dev-unsubscribe-secret
+      HL_PUBLIC_BASE_URL: http://localhost:8000
+    command: ["python", "-m", "hiringleads.worker"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:

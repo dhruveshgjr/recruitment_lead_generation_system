@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+  <body style="margin:0;background:#f5f7fa;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+    <div style="max-width:760px;margin:0 auto;padding:24px 12px;">
+      <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
+        <div style="padding:22px 24px;background:#111827;color:#ffffff;">
+          <div style="font-size:22px;font-weight:700;">{{ watchlist.name }}</div>
+          <div style="font-size:13px;color:#d1d5db;margin-top:5px;">
+            {{ leads|length }} public hiring signal{% if leads|length != 1 %}s{% endif %}
+            · generated {{ generated_at }}
+          </div>
+        </div>
+
+        {% for lead in leads %}
+        <div style="padding:18px 24px;border-bottom:1px solid #eef0f3;">
+          <div style="font-size:13px;color:#6b7280;">{{ lead.company }} · score {{ "%.0f"|format(lead.score) }}</div>
+          <div style="font-size:18px;font-weight:700;margin:4px 0 8px;">
+            <a href="{{ lead.url }}" style="color:#111827;text-decoration:none;">{{ lead.title }}</a>
+          </div>
+          <div style="font-size:13px;color:#374151;">
+            {{ lead.city or lead.country or ("Remote" if lead.remote_type == "remote" else "Location not specified") }}
+            {% if lead.open_roles_30d %} · {{ lead.open_roles_30d }} roles opened in 30d{% endif %}
+          </div>
+          {% if lead.skills %}
+          <div style="font-size:12px;color:#6b7280;margin-top:7px;">Skills: {{ lead.skills|join(", ") }}</div>
+          {% endif %}
+          {% if lead.evidence %}
+          <div style="font-size:11px;color:#9ca3af;margin-top:5px;">Why matched: {{ lead.evidence|join(" · ") }}</div>
+          {% endif %}
+          <div style="margin-top:11px;">
+            <a href="{{ lead.contact_page or lead.url }}" style="font-size:12px;color:#2563eb;text-decoration:none;">
+              Company careers/contact
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+
+        <div style="padding:15px 24px;background:#fafafa;border-top:1px solid #eef0f3;">
+          <div style="font-size:11px;color:#9ca3af;line-height:1.6;">
+            Public company-level hiring signals only.
+            <a href="{{ unsubscribe_url }}" style="color:#6b7280;">Unsubscribe from this watchlist</a>.
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
